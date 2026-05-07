@@ -16,6 +16,11 @@ function defaultSuccessMessage(method) {
   return 'Action successful'
 }
 
+function isLoginRequest(config) {
+  const url = String(config?.url || '')
+  return url.includes('/api/auth/login') || url.includes('/auth/login')
+}
+
 const api = axios.create({
   baseURL: 'https://fuel-backend-xfjd.onrender.com',
 })
@@ -24,12 +29,13 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) {
+    config.headers = config.headers || {}
     config.headers.Authorization = `Bearer ${token}`
   }
   return config
 })
 
-// Handle token expiration
+// Handle responses
 api.interceptors.response.use(
   (response) => {
     try {
@@ -47,10 +53,16 @@ api.interceptors.response.use(
     return response
   },
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status
+
+    // Do not hard-redirect on failed login attempts
+    if (status === 401 && !isLoginRequest(error.config)) {
       localStorage.removeItem('token')
-      window.location.href = '/login'
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login'
+      }
     }
+
     return Promise.reject(error)
   }
 )
