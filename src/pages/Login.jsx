@@ -12,10 +12,11 @@ import {
 import { useAuth } from '../context/AuthContext'
 
 function Login() {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
   const { login } = useAuth()
   const navigate = useNavigate()
 
@@ -25,10 +26,14 @@ function Login() {
     setLoading(true)
 
     try {
-      await login(username, password)
+      await login(email, password)
       navigate('/')
     } catch (err) {
-      setError(err.response?.data?.detail || 'Login failed')
+      setError(
+        err?.message ||
+        err?.response?.data?.detail ||
+        'Login failed'
+      )
     } finally {
       setLoading(false)
     }
@@ -48,6 +53,7 @@ function Login() {
           <Typography component="h1" variant="h5" align="center" gutterBottom>
             Fuel Station Management
           </Typography>
+
           <Typography variant="body2" align="center" color="text.secondary" gutterBottom>
             Sign in to continue
           </Typography>
@@ -63,22 +69,26 @@ function Login() {
               margin="normal"
               required
               fullWidth
-              label="Username"
+              label="Email"
+              type="email"
+              autoComplete="email"
               autoFocus
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
+
             <TextField
               margin="normal"
               required
               fullWidth
               label="Password"
               type="password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               inputProps={{ maxLength: 72 }}
-              helperText="Max 72 characters (avoid emojis/non-ASCII)."
             />
+
             <Button
               type="submit"
               fullWidth

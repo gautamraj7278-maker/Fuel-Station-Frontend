@@ -46,7 +46,7 @@ function Dashboard() {
 
   const fetchProducts = async () => {
     try {
-      const res = await api.get('/products/')
+      const res = await api.get('/api/products/')
       setProducts(res.data || [])
     } catch (error) {
       console.error('Failed to fetch products:', error)
@@ -59,15 +59,18 @@ function Dashboard() {
         from_date: dateFrom,
         to_date: dateTo,
       }
+
       if (productId) {
         params.product_id = productId
       }
+
       const [salesResponse, inventoryResponse] = await Promise.all([
-        api.get('/reports/sales-range', { params }),
-        api.get('/reports/inventory-status'),
+        api.get('/api/reports/sales-range', { params }),
+        api.get('/api/reports/inventory-status'),
       ])
-      setDailySales(salesResponse.data)
-      setInventory(inventoryResponse.data)
+
+      setDailySales(salesResponse.data || {})
+      setInventory(inventoryResponse.data || [])
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error)
     }
@@ -84,13 +87,16 @@ function Dashboard() {
             <Typography color="textSecondary" gutterBottom>
               {title}
             </Typography>
+
             {subtitle && (
               <Typography variant="caption" color="textSecondary" display="block">
                 {subtitle}
               </Typography>
             )}
+
             <Typography variant="h4">{value}</Typography>
           </Box>
+
           <Box sx={{ color: color, fontSize: 48 }}>{icon}</Box>
         </Box>
       </CardContent>
@@ -113,12 +119,14 @@ function Dashboard() {
           sx={{ minWidth: 220 }}
         >
           <MenuItem value="">All Products</MenuItem>
+
           {products.map((p) => (
             <MenuItem key={p.id} value={p.id}>
               {p.product_name}
             </MenuItem>
           ))}
         </TextField>
+
         <TextField
           label="From Date"
           type="date"
@@ -127,6 +135,7 @@ function Dashboard() {
           onChange={(e) => setDateFrom(e.target.value)}
           InputLabelProps={{ shrink: true }}
         />
+
         <TextField
           label="To Date"
           type="date"
@@ -147,6 +156,7 @@ function Dashboard() {
             subtitle={productLabel}
           />
         </Grid>
+
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="Total Liters Sold"
@@ -156,6 +166,7 @@ function Dashboard() {
             subtitle={productLabel}
           />
         </Grid>
+
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="Revenue"
@@ -165,6 +176,7 @@ function Dashboard() {
             subtitle={productLabel}
           />
         </Grid>
+
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="Low Stock Items"
@@ -179,6 +191,7 @@ function Dashboard() {
             <Typography variant="h6" gutterBottom>
               Inventory Status
             </Typography>
+
             <Grid container spacing={2} sx={{ mt: 1 }}>
               {inventory.map((item) => (
                 <Grid item xs={12} sm={4} key={item.fuel_type}>
@@ -189,14 +202,17 @@ function Dashboard() {
                     }}
                   >
                     <Typography variant="subtitle1" fontWeight="bold">
-                      {item.fuel_type.toUpperCase()}
+                      {String(item.fuel_type || '').toUpperCase()}
                     </Typography>
+
                     <Typography variant="body2">
-                      Stock: {item.current_stock.toFixed(2)} L
+                      Stock: {(item.current_stock || 0).toFixed(2)} L
                     </Typography>
+
                     <Typography variant="body2">
-                      Price: ₹{item.price_per_liter.toFixed(2)}/L
+                      Price: ₹{(item.price_per_liter || 0).toFixed(2)}/L
                     </Typography>
+
                     {item.needs_reorder && (
                       <Typography variant="caption" color="error">
                         ⚠️ Needs Reorder
