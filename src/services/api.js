@@ -22,6 +22,7 @@ function isAuthRequest(config) {
   const url = String(config?.url || '')
 
   return (
+    url.startsWith('/auth/') ||
     url.includes('/auth/me') ||
     url.includes('/auth/verify') ||
     url.includes('/api/auth/login') ||
@@ -29,13 +30,41 @@ function isAuthRequest(config) {
   )
 }
 
+function normalizeApiUrl(config) {
+  const url = String(config?.url || '')
+
+  // Do not modify full external URLs
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return config
+  }
+
+  // Do not modify auth routes
+  if (url.startsWith('/auth/')) {
+    return config
+  }
+
+  // Do not double-prefix routes already starting with /api
+  if (url.startsWith('/api/')) {
+    return config
+  }
+
+  // Prefix all normal backend routes with /api
+  if (url.startsWith('/')) {
+    config.url = `/api${url}`
+  }
+
+  return config
+}
+
 const api = axios.create({
   baseURL: 'https://fuel-backend-xfjd.onrender.com',
 })
 
-// Add token to every backend request
+// Add token and normalize API path
 api.interceptors.request.use(
   (config) => {
+    config = normalizeApiUrl(config)
+
     const token = localStorage.getItem('token')
 
     if (token) {
